@@ -79,7 +79,7 @@ class BazelBuildTask(TaskExtensionPoint):
         if args.bazel_task:
             cmd += [args.bazel_task]
         else:
-            cmd += ['build', '//:ProjectRunner' ]
+            cmd += ['build', '//...' ]
 
         # Bazel Arguments
         cmd += (args.bazel_args or [])

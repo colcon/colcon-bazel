@@ -23,14 +23,14 @@ class BazelPackageIdentification(PackageIdentificationExtensionPoint):
     def identify(self, metadata):  # noqa: D102
         if metadata.type is not None and metadata.type != 'bazel':
             return
-        
-        ws_file = metadata.path / 'WORKSPACE'
-        if not ws_file.is_file():
-            return
-            
+
+#        ws_file = metadata.path / 'WORKSPACE'
+#        if not ws_file.is_file():
+#            return
+
         build_file = metadata.path / 'BUILD.bazel'
         if not build_file.is_file():
-            build_file = metadata.path / 'BUILD'
+            build_file = metadata.path / 'BUILD' # Dangerous, but valide for Bazel !
             if not build_file.is_file():
                 return
 
