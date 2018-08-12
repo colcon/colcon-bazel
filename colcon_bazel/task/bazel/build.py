@@ -1,12 +1,10 @@
 # Copyright 2018 Mickael Gaillard
 # Licensed under the Apache License, Version 2.0
 
-import ast
-import os
-from pathlib import Path
-import re
-
-from colcon_bazel.task.bazel import BAZEL_EXECUTABLE
+from colcon_bazel.task.bazel import get_bazel_executable
+from colcon_bazel.task.bazel import get_bazel_startup_options
+from colcon_bazel.task.bazel import get_bazel_command
+from colcon_bazel.task.bazel import get_bazel_arguments
 from colcon_core.environment import create_environment_scripts
 from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import satisfies_version
@@ -15,7 +13,6 @@ from colcon_core.task import check_call
 from colcon_core.task import TaskExtensionPoint
 
 logger = colcon_logger.getChild(__name__)
-
 
 class BazelBuildTask(TaskExtensionPoint):
     """Build bazel packages."""
@@ -62,42 +59,27 @@ class BazelBuildTask(TaskExtensionPoint):
     async def _build(self, args, env):
         self.progress('build')
 
-        # Bazel Executable
-        if has_local_executable(args):
-            cmd = [str(get_local_executable(args).absolute())]
-        elif BAZEL_EXECUTABLE is not None:
-            cmd = [BAZEL_EXECUTABLE]
-        else:
-            msg = "Could not find 'bazel' or 'wrapper' executable"
-            logger.error(msg)
-            raise RuntimeError(msg)
+        bzl_exec_path = get_bazel_executable(args)
+        bzl_startup_options = get_bazel_startup_options(args)
+        bzl_command = get_bazel_command(args)
+        bzl_args = get_bazel_arguments(args)
+        bzl_target_patterns = ['//...']
 
-        cmd += ['--output_base=' + args.build_base + '/bazel']
-        cmd += ['--install_base=' + args.install_base + '/bazel']
+        # Make full cmd
+        # https://docs.bazel.build/versions/master/command-line-reference.html
+        cmd = [bzl_exec_path]
+        cmd.extend(bzl_startup_options)
+        cmd.append(bzl_command)
+        cmd.extend(bzl_args)
+        cmd.append('--')
+        cmd.extend(bzl_target_patterns)
 
-        # Bazel Task (by default 'build')
-        if args.bazel_task:
-            cmd += [args.bazel_task]
-        else:
-            cmd += ['build', '//...' ]
-
-        # Bazel Arguments
-        cmd += (args.bazel_args or [])
-
-        # Disable Symlink in src.
-        cmd += ['--symlink_prefix=/']
+        # Patch Bazel : https://github.com/bazelbuild/bazel/issues/5865
+        #cmd += ['2>&1']
+        #cmd += ['>/dev/null 2>&1']
 
         print(' '.join(cmd))
         # invoke build step
         return await check_call(
             self.context, cmd, cwd=args.path, env=env)
-
-def has_local_executable(args):
-    bazel_path   = get_local_executable(args)
-    return bazel_path.is_file()
-
-def get_local_executable(args):
-    bazel_script = 'bazelw'
-    bazel_path   = Path(args.path) / bazel_script
-    return bazel_path
 

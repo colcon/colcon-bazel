@@ -3,11 +3,16 @@
 
 import os
 from pathlib import Path
+import re
 import shutil
-import subprocess
 
 from colcon_core.environment_variable import EnvironmentVariable
 from colcon_core.subprocess import check_output
+
+BZL_COMAND = "build"
+BZL_OUTPUT = "--output_base"
+BZL_INSTALL = "--install_base"
+BZL_SYMLYNK = "--symlink_prefix"
 
 """Environment variable to override the Bazel executable"""
 BAZEL_COMMAND_ENVIRONMENT_VARIABLE = EnvironmentVariable(
@@ -76,4 +81,62 @@ async def get_bazel_tasks(path):
     lines = output.decode().splitlines()
     separator = ' - '
     return [l.split(separator)[0] for l in lines if separator in l]
+
+def get_bazel_executable(args):
+    if _has_local_executable(args):
+        cmd_exec_path = str(_get_local_executable(args).absolute())
+    elif BAZEL_EXECUTABLE is not None:
+        cmd_exec_path = BAZEL_EXECUTABLE
+    else:
+        raise RuntimeError("Could not find 'bazel' or 'wrapper' executable.")
+    return cmd_exec_path
+
+def get_bazel_startup_options(args):
+    bazel_args = (args.bazel_args or [])
+    tmp_args = " ".join(bazel_args)
+
+    if (not re.match(".*(" + BZL_OUTPUT + "|" + BZL_INSTALL + ").*", tmp_args)):
+        # Default Bazel 'build' & 'install' folder for colcon.
+        cmd_startup_options = [BZL_OUTPUT + '=' + args.build_base + '/bazel',
+                               BZL_INSTALL + '=' + args.install_base + '/bazel']
+    else:
+        # Do not overide the default Bazel 'build' & 'install'
+        # folder for colcon.
+        msg = "Could not use 'output_base' and 'install_base' arguments."
+        raise RuntimeError(msg)
+
+    return cmd_startup_options
+
+def get_bazel_command(args):
+
+    if args.bazel_task:
+        cmd_command = args.bazel_task
+    else:
+        cmd_command = BZL_COMAND
+
+    return cmd_command
+
+def get_bazel_arguments(args):
+    cmd_args = (args.bazel_args or [])
+    tmp_args = " ".join(cmd_args)
+
+    # Disable Symlink in src.
+    if (not re.match(".*" +BZL_SYMLYNK +".*", " ".join(tmp_args))):
+        cmd_args += [BZL_SYMLYNK + '=/']
+
+    # Define verbose mode.
+    cmd_args += ['--show_result=-1', '--noshow_progress',
+                 '--noshow_loading_progress', '--logging=0',
+                 '--verbose_failures']
+
+    return cmd_args
+
+def _has_local_executable(args):
+    bazel_path   = _get_local_executable(args)
+    return bazel_path.is_file()
+
+def _get_local_executable(args):
+    bazel_script = 'bazelw'
+    bazel_path   = Path(args.path) / bazel_script
+    return bazel_path
 
