@@ -107,12 +107,12 @@ def get_bazel_startup_options(args):
 
     return cmd_startup_options
 
-def get_bazel_command(args):
+def get_bazel_command(args, default_cmd=BZL_COMAND ):
 
     if args.bazel_task:
         cmd_command = args.bazel_task
     else:
-        cmd_command = BZL_COMAND
+        cmd_command = default_cmd
 
     return cmd_command
 
