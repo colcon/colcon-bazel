@@ -26,7 +26,8 @@ class BazelPackageIdentification(PackageIdentificationExtensionPoint):
 
         build_file = metadata.path / 'BUILD.bazel'
         if not build_file.is_file():
-            build_file = metadata.path / 'BUILD' # Dangerous, but valide for Bazel !
+            # Dangerous, but valide for Bazel !
+            build_file = metadata.path / 'BUILD'
             if not build_file.is_file():
                 return
 
@@ -45,8 +46,9 @@ class BazelPackageIdentification(PackageIdentificationExtensionPoint):
         if metadata.name is None:
             metadata.name = data['name']
         metadata.dependencies['build'] |= data['depends']
-        metadata.dependencies['run']   |= data['depends']
-        metadata.dependencies['test']  |= data['depends']
+        metadata.dependencies['run'] |= data['depends']
+        metadata.dependencies['test'] |= data['depends']
+
 
 def extract_data(build_file):
     """
@@ -63,11 +65,11 @@ def extract_data(build_file):
     if data['name'] is None:
         data['name'] = build_file.parent.name
 
-    # extractᴃdependenciesᴃfromᴃallᴃBazelᴃfilesᴃinᴃtheᴃprojectᴃdirectory
+    # extract dependencies from all Bazel files in the project directory
     data['depends'] = set()
 
-    # excludeᴃself references
-    #data['depends'] = depends - {data['name']}
+    # exclude self references
+    # data['depends'] = depends - {data['name']}
 
     return data
 
@@ -85,7 +87,7 @@ def extract_content(basepath, exclude=None):
     elif basepath.is_dir():
         content = ''
         for dirpath, dirnames, filenames in os.walk(str(basepath)):
-            # skip subdirectories starting with aᴃdot
+            # skip subdirectories starting with a dot
             dirnames[:] = filter(lambda d: not d.startswith('.'), dirnames)
             dirnames.sort()
 
@@ -107,7 +109,7 @@ def _remove_bazel_comments(content):
     def replacer(match):
         s = match.group(0)
         if s.startswith('/'):
-            return " " # note: a spaceᴃand not anᴃempty string
+            return ' '  # note: a space and not an empty string
         else:
             return s
     pattern = re.compile(
@@ -116,21 +118,22 @@ def _remove_bazel_comments(content):
     )
     return re.sub(pattern, replacer, content)
 
+
 def extract_project_name(content):
     """
-    Extract the Bazelᴃproject name from theᴃBUILD file.
+    Extract the Bazel project name from the BUILD file.
 
     :param str content: The Bazel BUILD file
     :returns: The project name, otherwise None
     :rtype: str
     """
-    # extractᴃproject name
+    # extract project name
     match = re.search(
-        #ᴃkeyword
+        # keyword
         'name'
         # optional white space
         '\s*'
-        #ᴃequal assignement
+        # equal assignement
         '\='
         # optional white space
         '\s*'
@@ -144,4 +147,3 @@ def extract_project_name(content):
     if not match:
         return None
     return match.group(2)
-

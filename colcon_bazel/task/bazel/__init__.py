@@ -9,18 +9,19 @@ import shutil
 from colcon_core.environment_variable import EnvironmentVariable
 from colcon_core.subprocess import check_output
 
-BZL_COMAND = "build"
-BZL_OUTPUT = "--output_base"
-BZL_INSTALL = "--install_base"
-BZL_SYMLYNK = "--symlink_prefix"
+BZL_COMAND = 'build'
+BZL_OUTPUT = '--output_base'
+BZL_INSTALL = '--install_base'
+BZL_SYMLYNK = '--symlink_prefix'
 
 """Environment variable to override the Bazel executable"""
 BAZEL_COMMAND_ENVIRONMENT_VARIABLE = EnvironmentVariable(
     'BAZEL_COMMAND', 'The full path to the Bazel executable')
-    
+
 """Environment variable to override the Bazel executable"""
 BAZEL_HOME_ENVIRONMENT_VARIABLE = EnvironmentVariable(
     'BAZEL_HOME', 'The full path to the Bazel home')
+
 
 def which_executable(environment_variable, executable_name):
     """
@@ -34,9 +35,9 @@ def which_executable(environment_variable, executable_name):
     :rtype: str
     """
     cmd = None
-    env_cmd  = os.getenv(environment_variable)
+    env_cmd = os.getenv(environment_variable)
     env_home = os.getenv(BAZEL_HOME_ENVIRONMENT_VARIABLE.name)
-    
+
     # Case of BAZEL_COMMAND (colcon)
     if env_cmd is not None and Path(env_cmd).is_file():
         cmd = env_cmd
@@ -52,6 +53,7 @@ def which_executable(environment_variable, executable_name):
         cmd = shutil.which(executable_name)
 
     return cmd
+
 
 BAZEL_EXECUTABLE = which_executable(
     BAZEL_COMMAND_ENVIRONMENT_VARIABLE.name, 'bazel')
@@ -82,7 +84,10 @@ async def get_bazel_tasks(path):
     separator = ' - '
     return [l.split(separator)[0] for l in lines if separator in l]
 
+
 def get_bazel_executable(args):
+    """
+    """
     if _has_local_executable(args):
         cmd_exec_path = str(_get_local_executable(args).absolute())
     elif BAZEL_EXECUTABLE is not None:
@@ -91,11 +96,14 @@ def get_bazel_executable(args):
         raise RuntimeError("Could not find 'bazel' or 'wrapper' executable.")
     return cmd_exec_path
 
-def get_bazel_startup_options(args):
-    bazel_args = (args.bazel_args or [])
-    tmp_args = " ".join(bazel_args)
 
-    if (not re.match(".*(" + BZL_OUTPUT + "|" + BZL_INSTALL + ").*", tmp_args)):
+def get_bazel_startup_options(args):
+    """
+    """
+    bazel_args = (args.bazel_args or [])
+    tmp_args = ' '.join(bazel_args)
+
+    if (not re.match('.*(' + BZL_OUTPUT + '|' + BZL_INSTALL + ').*', tmp_args)):
         # Default Bazel 'build' & 'install' folder for colcon.
         cmd_startup_options = [BZL_OUTPUT + '=' + args.build_base + '/bazel',
                                BZL_INSTALL + '=' + args.install_base + '/bazel']
@@ -107,7 +115,8 @@ def get_bazel_startup_options(args):
 
     return cmd_startup_options
 
-def get_bazel_command(args, default_cmd=BZL_COMAND ):
+
+def get_bazel_command(args, default_cmd=BZL_COMAND):
 
     if args.bazel_task:
         cmd_command = args.bazel_task
@@ -116,12 +125,13 @@ def get_bazel_command(args, default_cmd=BZL_COMAND ):
 
     return cmd_command
 
+
 def get_bazel_arguments(args):
     cmd_args = (args.bazel_args or [])
-    tmp_args = " ".join(cmd_args)
+    tmp_args = ' '.join(cmd_args)
 
     # Disable Symlink in src.
-    if (not re.match(".*" +BZL_SYMLYNK +".*", " ".join(tmp_args))):
+    if (not re.match('.*' + BZL_SYMLYNK + '.*', ' '.join(tmp_args))):
         cmd_args += [BZL_SYMLYNK + '=/']
 
     # Define verbose mode.
@@ -131,12 +141,13 @@ def get_bazel_arguments(args):
 
     return cmd_args
 
+
 def _has_local_executable(args):
-    bazel_path   = _get_local_executable(args)
+    bazel_path = _get_local_executable(args)
     return bazel_path.is_file()
+
 
 def _get_local_executable(args):
     bazel_script = 'bazelw'
-    bazel_path   = Path(args.path) / bazel_script
+    bazel_path = Path(args.path) / bazel_script
     return bazel_path
-

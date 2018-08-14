@@ -14,6 +14,7 @@ from colcon_core.task import TaskExtensionPoint
 
 logger = colcon_logger.getChild(__name__)
 
+
 class BazelBuildTask(TaskExtensionPoint):
     """Build bazel packages."""
 
@@ -75,11 +76,9 @@ class BazelBuildTask(TaskExtensionPoint):
         cmd.extend(bzl_target_patterns)
 
         # Patch Bazel : https://github.com/bazelbuild/bazel/issues/5865
-        #cmd += ['2>&1']
-        #cmd += ['>/dev/null 2>&1']
+        # cmd += ['2>&1']
+        # cmd += ['>/dev/null 2>&1']
 
-        print(' '.join(cmd))
         # invoke build step
         return await check_call(
             self.context, cmd, cwd=args.path, env=env)
-

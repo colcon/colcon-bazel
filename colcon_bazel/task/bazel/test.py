@@ -5,11 +5,9 @@ from colcon_bazel.task.bazel import get_bazel_executable
 from colcon_bazel.task.bazel import get_bazel_startup_options
 from colcon_bazel.task.bazel import get_bazel_command
 from colcon_bazel.task.bazel import get_bazel_arguments
-from colcon_core.event.test import TestFailure
 from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.shell import get_command_environment
-from colcon_core.subprocess import check_output
 from colcon_core.task import check_call
 from colcon_core.task import TaskExtensionPoint
 
@@ -37,7 +35,7 @@ class BazelTestTask(TaskExtensionPoint):
     async def test(self, *, additional_hooks=None):  # noqa: D102
         pkg = self.context.pkg
         args = self.context.args
-        
+
         logger.info(
             "Testing Bazel package in '{args.path}'".format_map(locals()))
 
@@ -71,11 +69,10 @@ class BazelTestTask(TaskExtensionPoint):
         cmd.extend(bzl_target_patterns)
 
         # Patch Bazel : https://github.com/bazelbuild/bazel/issues/5865
-        #cmd += ['2>&1']
-        #cmd += ['>/dev/null 2>&1']
+        # cmd += ['2>&1']
+        # cmd += ['>/dev/null 2>&1']
 
         print(' '.join(cmd))
         # invoke build step
         return await check_call(
             self.context, cmd, cwd=args.path, env=env)
-

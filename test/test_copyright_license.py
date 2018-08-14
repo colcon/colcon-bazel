@@ -37,4 +37,3 @@ def check_files(paths):
             else:
                 print('Found copyright / license in:', path)
     return missing
-

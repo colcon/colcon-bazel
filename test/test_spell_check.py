@@ -44,4 +44,3 @@ def test_spell_check_word_list():
         lines = h.read().splitlines()
     assert lines == sorted(lines), \
         'The word list should be ordered alphabetically'
-

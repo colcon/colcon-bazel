@@ -45,4 +45,3 @@ def test_flake8():
 
     assert not report.total_errors, \
         'flake8 reported {total_errors} errors'.format_map(locals())
-
