@@ -120,7 +120,7 @@ def get_bazel_startup_options(args):
         install_path = BZL_INSTALL + '=' + args.install_base + '/bazel'
         cmd_startup_options = [output_path, install_path]
     else:
-        # Do not overide the default Bazel 'build' & 'install'
+        # Do not override the default Bazel 'build' & 'install'
         # folder for colcon.
         msg = "Could not use 'output_base' and 'install_base' arguments."
         raise RuntimeError(msg)
@@ -155,7 +155,7 @@ def get_bazel_arguments(args):
     cmd_args = (args.bazel_args or [])
     tmp_args = ' '.join(cmd_args)
 
-    # Disable Symlink in src.
+    # Disable symbolic link in source folder.
     if (not re.match('.*' + BZL_SYMLYNK + '.*', ' '.join(tmp_args))):
         cmd_args += [BZL_SYMLYNK + '=/']
 
