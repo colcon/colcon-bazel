@@ -1,3 +1,4 @@
+# Copyright 2016-2018 Dirk Thomas
 # Copyright 2018 Mickael Gaillard
 # Licensed under the Apache License, Version 2.0
 
@@ -25,11 +26,11 @@ def check_files(paths):
             if not content:
                 continue
             lines = content.splitlines()
-            has_copyright = \
-                any(l for l in lines if l.startswith('# Copyright'))
+            has_copyright = any(filter(
+                lambda line: line.startswith('# Copyright'), lines))
             has_license = \
                 '# Licensed under the Apache License, Version 2.0' in lines
-            if not has_copyright or not has_license:
+            if not has_copyright or not has_license:  # pragma: no cover
                 print(
                     'Could not find copyright / license in:', path,
                     file=sys.stderr)
