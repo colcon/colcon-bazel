@@ -59,7 +59,7 @@ class BazelTestTask(TaskExtensionPoint):
         bzl_args = get_bazel_arguments(args)
         bzl_target_patterns = ['//...']
 
-        # Make full cmd
+        # Make full command
         # https://docs.bazel.build/versions/master/command-line-reference.html
         cmd = [bzl_exec_path]
         cmd.extend(bzl_startup_options)
@@ -68,11 +68,6 @@ class BazelTestTask(TaskExtensionPoint):
         cmd.append('--')
         cmd.extend(bzl_target_patterns)
 
-        # Patch Bazel : https://github.com/bazelbuild/bazel/issues/5865
-        # cmd += ['2>&1']
-        # cmd += ['>/dev/null 2>&1']
-
-        print(' '.join(cmd))
         # invoke build step
         return await check_call(
             self.context, cmd, cwd=args.path, env=env)

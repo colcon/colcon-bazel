@@ -10,11 +10,13 @@ config
 cpu
 dict
 fhs
+gaillard
 github
 https
 jobserver
 kislyuk
 makeflags
+mickael
 noqa
 pragma
 rtype

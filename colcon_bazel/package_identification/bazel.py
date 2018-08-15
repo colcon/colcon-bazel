@@ -26,7 +26,7 @@ class BazelPackageIdentification(PackageIdentificationExtensionPoint):
 
         build_file = metadata.path / 'BUILD.bazel'
         if not build_file.is_file():
-            # Dangerous, but valide for Bazel !
+            # Dangerous, but valid for Bazel !
             build_file = metadata.path / 'BUILD'
             if not build_file.is_file():
                 return
@@ -133,7 +133,7 @@ def extract_project_name(content):
         'name'
         # optional white space
         '\s*'
-        # equal assignement
+        # equal assignment
         '\='
         # optional white space
         '\s*'
