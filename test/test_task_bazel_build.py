@@ -2,14 +2,14 @@
 # Licensed under the Apache License, Version 2.0
 
 
-import asyncio
 import pytest
+
+from colcon_bazel.task.bazel.build import BazelBuildTask
+from colcon_core.package_descriptor import PackageDescriptor
+from colcon_core.task import TaskContext
 
 from tempfile import TemporaryDirectory
 
-from colcon_core.package_descriptor import PackageDescriptor
-from colcon_core.task import TaskContext
-from colcon_bazel.task.bazel.build import BazelBuildTask
 
 @pytest.mark.asyncio
 async def test_task_build():
