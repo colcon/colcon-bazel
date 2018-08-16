@@ -20,34 +20,34 @@ class BazelPackageIdentification(PackageIdentificationExtensionPoint):
             PackageIdentificationExtensionPoint.EXTENSION_POINT_VERSION,
             '^1.0')
 
-    def identify(self, metadata):  # noqa: D102
-        if metadata.type is not None and metadata.type != 'bazel':
+    def identify(self, desc):  # noqa: D102
+        if desc.type is not None and desc.type != 'bazel':
             return
 
-        build_file = metadata.path / 'BUILD.bazel'
+        build_file = desc.path / 'BUILD.bazel'
         if not build_file.is_file():
             # Dangerous, but valid for Bazel !
-            build_file = metadata.path / 'BUILD'
+            build_file = desc.path / 'BUILD'
             if not build_file.is_file():
                 return
 
         data = extract_data(build_file)
-        if not data['name'] and not metadata.name:
+        if not data['name']:
             msg = ("Failed to extract project name from '%s'" % build_file)
             logger.error(msg)
             raise RuntimeError(msg)
 
-        if metadata.name is not None and metadata.name != data['name']:
+        if desc.name is not None and desc.name != data['name']:
             msg = 'Package name already set to different value'
             logger.error(msg)
             raise RuntimeError(msg)
 
-        metadata.type = 'bazel'
-        if metadata.name is None:
-            metadata.name = data['name']
-        metadata.dependencies['build'] |= data['depends']
-        metadata.dependencies['run'] |= data['depends']
-        metadata.dependencies['test'] |= data['depends']
+        desc.type = 'bazel'
+        if desc.name is None:
+            desc.name = data['name']
+        desc.dependencies['build'] |= data['depends']
+        desc.dependencies['run'] |= data['depends']
+        desc.dependencies['test'] |= data['depends']
 
 
 def extract_data(build_file):
@@ -87,7 +87,7 @@ def extract_content(basepath, exclude=None):
     elif basepath.is_dir():
         content = ''
         for dirpath, dirnames, filenames in os.walk(str(basepath)):
-            # skip subdirectories starting with a dot
+            # skip sub-directories starting with a dot
             dirnames[:] = filter(lambda d: not d.startswith('.'), dirnames)
             dirnames.sort()
 

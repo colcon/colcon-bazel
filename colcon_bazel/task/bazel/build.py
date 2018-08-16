@@ -1,10 +1,10 @@
 # Copyright 2018 Mickael Gaillard
 # Licensed under the Apache License, Version 2.0
 
+from colcon_bazel.task.bazel import get_bazel_arguments
+from colcon_bazel.task.bazel import get_bazel_command
 from colcon_bazel.task.bazel import get_bazel_executable
 from colcon_bazel.task.bazel import get_bazel_startup_options
-from colcon_bazel.task.bazel import get_bazel_command
-from colcon_bazel.task.bazel import get_bazel_arguments
 from colcon_core.environment import create_environment_scripts
 from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import satisfies_version
