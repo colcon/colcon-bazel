@@ -2,6 +2,7 @@ language: python
 python: "3.5"
 dist: trusty
 sudo: true
+
 env:
   global:
     - PKG=colcon_bazel
@@ -44,10 +45,11 @@ notifications:
 
 deploy:
   provider: pypi
-  user: "$PYPI_USER"
-  password: "$PYPI_PASS"
+  user: $PYPI_USER
+  password: $PYPI_PASS
   skip_cleanup: true
   on:
     tags: true
     branch: master
-    condition: "$TEST_SUITE" = "pytest"
+    condition: $TEST_SUITE = pytest
+
