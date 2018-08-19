@@ -10,6 +10,7 @@ from colcon_core.task import TaskContext
 
 from tempfile import TemporaryDirectory
 
+
 @pytest.mark.asyncio
 async def test_task_test():
     with TemporaryDirectory(prefix='test_colcon_') as basepath:

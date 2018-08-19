@@ -7,10 +7,8 @@ from tempfile import TemporaryDirectory
 from colcon_core.package_descriptor import PackageDescriptor
 from colcon_bazel.package_identification.bazel \
     import BazelPackageIdentification
-from colcon_bazel.package_identification.bazel \
-    import extract_data
-from colcon_bazel.package_identification.bazel \
-    import extract_content
+from colcon_bazel.package_identification.bazel import extract_data
+from colcon_bazel.package_identification.bazel import extract_content
 import pytest
 
 
@@ -61,18 +59,29 @@ def test_identify():
             '    runtime_deps = [":run-depA", ":run-depB"]\n'
             ')\n'
             '\n'
+            'java_library(\n'
+            '    name = "other-name-lib",\n'
+            '    deps = [":lib-dep", "@log4j//jar", "other-name"]\n'
+            '    runtime_deps = [":lib-run-dep"]\n'
+            ')\n'
+            '\n'
             'java_test(\n'
             '    name = "other-name-test",\n'
             '    deps = [":test-dep"],\n'
             '    runtime_deps = [":test-run-dep"]\n'
-            ')\n'
-            )
+            ')\n')
 
         assert extension.identify(desc) is None
         assert desc.name == 'other-name'
         assert desc.type == 'bazel'
         assert set(desc.dependencies.keys()) == {'build', 'run', 'test'}
-        # TODO check dependencies content
+        assert desc.dependencies['build'] == {'build-depA', 'build-depB',
+                                              'lib-dep'}
+        assert desc.dependencies['run'] == {'run-depA', 'run-depB',
+                                            'lib-run-dep'}
+        assert desc.dependencies['test'] == {'test-dep', 'test-run-dep'}
+
+        (basepath / 'sub-folder').mkdir(parents=True, exist_ok=True)
 
 
 def test_extract_data():
@@ -91,8 +100,9 @@ def test_extract_content():
         basepath = Path(basepath)
         # TODO Add comment
         (basepath / 'BUILD.bazel').write_text(
-            'java_binary(\n'
+            '# Test comment\n'
+            'java_binary( # Test comment\n'
             '    name = "pkg-name",\n'
             ')\n')
         content = extract_content(basepath / 'BUILD.bazel')
-        assert content == 'java_binary(\n    name = "pkg-name",\n)\n'
+        assert content == 'java_binary(\nname = "pkg-name",\n)\n'

@@ -8,16 +8,18 @@ from colcon_bazel.argcomplete_completer.bazel_args \
 import sys
 import pytest
 
+
 @pytest.mark.skipif(sys.platform == 'win32',
-                    reason="does not run on windows")
+                    reason='does not run on windows')
 def test_get_completer():
     extension = BazelArgcompleteCompleter()
 
     assert extension.get_completer(None, [''], None) is None
     assert extension.get_completer(None, ['--bazel-args'], None) is None
 
+
 @pytest.mark.skipif(sys.platform == 'win32',
-                    reason="does not run on windows")
+                    reason='does not run on windows')
 def test_get_bazel_args_completer_choices():
     choices = get_bazel_args_completer_choices()
 
