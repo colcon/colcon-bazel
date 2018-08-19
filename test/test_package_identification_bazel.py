@@ -7,10 +7,8 @@ from tempfile import TemporaryDirectory
 from colcon_core.package_descriptor import PackageDescriptor
 from colcon_bazel.package_identification.bazel \
     import BazelPackageIdentification
-from colcon_bazel.package_identification.bazel \
-    import extract_data
-from colcon_bazel.package_identification.bazel \
-    import extract_content
+from colcon_bazel.package_identification.bazel import extract_data
+from colcon_bazel.package_identification.bazel import extract_content
 import pytest
 
 
@@ -65,8 +63,7 @@ def test_identify():
             '    name = "other-name-test",\n'
             '    deps = [":test-dep"],\n'
             '    runtime_deps = [":test-run-dep"]\n'
-            ')\n'
-            )
+            ')\n')
 
         assert extension.identify(desc) is None
         assert desc.name == 'other-name'
@@ -91,8 +88,9 @@ def test_extract_content():
         basepath = Path(basepath)
         # TODO Add comment
         (basepath / 'BUILD.bazel').write_text(
-            'java_binary(\n'
+            '# Test comment\n'
+            'java_binary( # Test comment\n'
             '    name = "pkg-name",\n'
             ')\n')
         content = extract_content(basepath / 'BUILD.bazel')
-        assert content == 'java_binary(\n    name = "pkg-name",\n)\n'
+        assert content == 'java_binary(\nname = "pkg-name",\n)\n'

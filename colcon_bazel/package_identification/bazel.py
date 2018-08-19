@@ -2,13 +2,24 @@
 # Licensed under the Apache License, Version 2.0
 
 import os
-from pathlib import Path
 import re
 
 from colcon_core.package_identification import logger
 from colcon_core.package_identification \
     import PackageIdentificationExtensionPoint
 from colcon_core.plugin_system import satisfies_version
+
+from pathlib import Path
+from pyparsing import delimitedList
+from pyparsing import Dict
+from pyparsing import Group
+from pyparsing import Literal
+from pyparsing import nestedExpr
+from pyparsing import OneOrMore
+from pyparsing import Optional
+from pyparsing import pyparsing_common
+from pyparsing import QuotedString
+from pyparsing import Word
 
 
 class BazelPackageIdentification(PackageIdentificationExtensionPoint):
@@ -66,7 +77,9 @@ def extract_data(build_file):
         data['name'] = build_file.parent.name
 
     # extract dependencies from all Bazel files in the project directory
-    data['depends'] = set()
+    depends_content = content + extract_content(
+        build_file.parent, exclude=[build_file])
+    data['depends'] = extract_dependencies(depends_content)
 
     # exclude self references
     # data['depends'] = depends - {data['name']}
@@ -106,24 +119,16 @@ def extract_content(basepath, exclude=None):
 
 
 def _remove_bazel_comments(content):
-    def replacer(match):
-        s = match.group(0)
-        if s.startswith('/'):
-            return ' '  # note: a space and not an empty string
-        else:
-            return s
-    pattern = re.compile(
-        r'#.*$',
-        re.DOTALL | re.MULTILINE
-    )
-    return re.sub(pattern, replacer, content)
+    result = re.sub(r'(?m) ?#.*', '', content)  # Remove comment.
+    result = re.sub(r'(?m)^\s*\n?', '', result)  # Remove extra space.
+    return result
 
 
 def extract_project_name(content):
     """
     Extract the Bazel project name from the BUILD file.
 
-    :param str content: The Bazel BUILD file
+    :param str content: The Bazel BUILD file content.
     :returns: The project name, otherwise None
     :rtype: str
     """
@@ -147,3 +152,45 @@ def extract_project_name(content):
     if not match:
         return None
     return match.group(2)
+
+
+def extract_dependencies(depends_content):
+    """
+    Extract the Bazel project name from the BUILD file.
+
+    :param str depends_content: The Bazel BUILD files merged content.
+    :returns: List of dependencies, otherwise None
+    :rtype: set
+    """
+    quoted = QuotedString(quoteChar='"') | QuotedString(quoteChar='\'')
+    item_name = pyparsing_common.identifier.setName('id')
+    item_value = (
+        Group(  # Array values.
+            Literal('[').suppress() +
+            delimitedList(quoted) +
+            Literal(']').suppress()) |
+        Group(  # Glob case.
+            Word('glob([').suppress() +
+            delimitedList(quoted) +
+            Word('])').suppress()) |
+        quoted).setName('value')  # Quoted string value.
+    rule_item = Group(item_name + Literal('=').suppress() +
+                      item_value + Optional(',').suppress())
+    rule_items = Dict(delimitedList(rule_item))
+    rule_values = nestedExpr(content=rule_items)
+    rule_taret = item_name
+    rule = Group(rule_taret + rule_values)
+    parser = Dict(OneOrMore(rule))
+
+    try:
+        config = parser.parseString(depends_content)
+    except Exception as e:
+        logger.warning('No valid Build content')
+        return set()
+
+    depends = set()
+    for key, value in config.asDict().items() or []:
+        if 'deps' in value:
+            depends.update(value.get('deps'))
+
+    return depends
