@@ -81,7 +81,11 @@ def test_identify():
                                             'lib-run-dep'}
         assert desc.dependencies['test'] == {'test-dep', 'test-run-dep'}
 
-        (basepath / 'sub-folder').mkdir(parents=True, exist_ok=True)
+        desc.name = None
+        (basepath / 'sub1/sub2/sub3').mkdir(parents=True, exist_ok=True)
+        assert extension.identify(desc) is None
+        assert desc.name == 'other-name'
+        assert desc.type == 'bazel'
 
 
 def test_extract_data():
