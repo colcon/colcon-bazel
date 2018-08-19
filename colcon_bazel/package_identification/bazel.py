@@ -10,6 +10,7 @@ from colcon_core.package_identification \
 from colcon_core.plugin_system import satisfies_version
 
 from pathlib import Path
+from pyparsing import alphanums
 from pyparsing import delimitedList
 from pyparsing import Dict
 from pyparsing import Group
@@ -56,9 +57,9 @@ class BazelPackageIdentification(PackageIdentificationExtensionPoint):
         desc.type = 'bazel'
         if desc.name is None:
             desc.name = data['name']
-        desc.dependencies['build'] |= data['depends']
-        desc.dependencies['run'] |= data['depends']
-        desc.dependencies['test'] |= data['depends']
+        desc.dependencies['build'] |= data['depends']['build']
+        desc.dependencies['run'] |= data['depends']['run']
+        desc.dependencies['test'] |= data['depends']['test']
 
 
 def extract_data(build_file):
@@ -79,10 +80,9 @@ def extract_data(build_file):
     # extract dependencies from all Bazel files in the project directory
     depends_content = content + extract_content(
         build_file.parent, exclude=[build_file])
-    data['depends'] = extract_dependencies(depends_content)
 
-    # exclude self references
-    # data['depends'] = depends - {data['name']}
+    config = parse_config(depends_content)
+    data['depends'] = extract_dependencies(config, exclude=data['name'])
 
     return data
 
@@ -154,13 +154,38 @@ def extract_project_name(content):
     return match.group(2)
 
 
-def extract_dependencies(depends_content):
+def extract_dependencies(depends_content, exclude=None):
     """
     Extract the Bazel project name from the BUILD file.
 
-    :param str depends_content: The Bazel BUILD files merged content.
-    :returns: List of dependencies, otherwise None
+    :param set depends_content: The Bazel BUILD files merged content.
+    :param str exclude: exclude self references.
+    :returns: List of dependencies, otherwise None.
     :rtype: set
+    """
+    depends = {'build': set(), 'run': set(), 'test': set()}
+
+    for key, value in depends_content.items() or []:
+        if 'binary' in key:
+            _extra_deps(value, 'deps', depends['build'], exclude)
+            _extra_deps(value, 'runtime_deps', depends['run'], exclude)
+        if 'library' in key:
+            _extra_deps(value, 'deps', depends['build'])
+            _extra_deps(value, 'runtime_deps', depends['run'], exclude)
+        if 'test' in key:
+            _extra_deps(value, 'deps', depends['test'])
+            _extra_deps(value, 'runtime_deps', depends['test'], exclude)
+
+    return depends
+
+
+def parse_config(content):
+    """
+    Parse the Bazel project BUILD file content.
+
+    :param str content: The Bazel BUILD file content.
+    :returns: Dictionary of config.
+    :rtype: dict
     """
     quoted = QuotedString(quoteChar='"') | QuotedString(quoteChar='\'')
     item_name = pyparsing_common.identifier.setName('id')
@@ -183,14 +208,31 @@ def extract_dependencies(depends_content):
     parser = Dict(OneOrMore(rule))
 
     try:
-        config = parser.parseString(depends_content)
+        config = parser.parseString(content)
     except Exception as e:
         logger.warning('No valid Build content')
-        return set()
+        return {}
 
-    depends = set()
-    for key, value in config.asDict().items() or []:
-        if 'deps' in value:
-            depends.update(value.get('deps'))
+    return config.asDict()
 
-    return depends
+
+def _extra_deps(value, entry, depends_target, exclude=None):
+    if entry in value:
+        pattern = Group(
+            Optional(Group(
+                Literal('@') +
+                Word(alphanums + '_-')
+            ).suppress()) +
+            Optional(Literal('//').suppress()) +
+            Optional(Word(alphanums + '_-/').suppress()) +
+            Optional(Literal(':').suppress()) +
+            Word(alphanums + '_-')
+        )
+
+        for dep in value.get(entry):
+            try:
+                extract_name = pattern.parseString(dep)[0][0]
+                if extract_name != exclude:  # exclude self references
+                    depends_target.update({extract_name})
+            except Exception as e:
+                logger.warning('No valid Build content %s' % dep)

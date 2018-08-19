@@ -59,6 +59,12 @@ def test_identify():
             '    runtime_deps = [":run-depA", ":run-depB"]\n'
             ')\n'
             '\n'
+            'java_library(\n'
+            '    name = "other-name-lib",\n'
+            '    deps = [":lib-dep", "@log4j//jar", "other-name"]\n'
+            '    runtime_deps = [":lib-run-dep"]\n'
+            ')\n'
+            '\n'
             'java_test(\n'
             '    name = "other-name-test",\n'
             '    deps = [":test-dep"],\n'
@@ -69,7 +75,13 @@ def test_identify():
         assert desc.name == 'other-name'
         assert desc.type == 'bazel'
         assert set(desc.dependencies.keys()) == {'build', 'run', 'test'}
-        # TODO check dependencies content
+        assert desc.dependencies['build'] == {'build-depA', 'build-depB',
+                                              'lib-dep'}
+        assert desc.dependencies['run'] == {'run-depA', 'run-depB',
+                                            'lib-run-dep'}
+        assert desc.dependencies['test'] == {'test-dep', 'test-run-dep'}
+
+        (basepath / 'sub-folder').mkdir(parents=True, exist_ok=True)
 
 
 def test_extract_data():
