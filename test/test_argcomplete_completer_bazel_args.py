@@ -14,8 +14,10 @@ import pytest
 def test_get_completer():
     extension = BazelArgcompleteCompleter()
 
-    assert extension.get_completer(None, [''], None) is None
-    assert extension.get_completer(None, ['--bazel-args'], None) is None
+    args=['--bazel-args']
+    karg={'--bazel-args': 'test'}
+    assert extension.get_completer(None, None, None) is None
+    assert extension.get_completer(None, *args, **karg) is None
 
 
 @pytest.mark.skipif(sys.platform == 'win32',

@@ -19,7 +19,7 @@ install:
   - pip install -U git+https://github.com/colcon/colcon-core
   - pip install -U git+https://github.com/colcon/colcon-library-path
   - pip install -U git+https://github.com/colcon/colcon-argcomplete
-  - pip install -U pyparsing
+  - pip install -U pyparsing argcomplete
   # tests_require
   - pip install -U flake8-blind-except flake8-builtins flake8-class-newline flake8-comprehensions flake8-deprecated flake8-docstrings flake8-quotes pep8-naming pyenchant pylint pytest pytest-cov
   # for uploading the coverage information to codecov
