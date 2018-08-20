@@ -2,6 +2,7 @@
 .eggs/
 .pytest_cache/
 build/
+deb_dist/
 dist/
 *.egg-info/
 *.pyc
