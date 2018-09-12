@@ -2,14 +2,14 @@
 # Licensed under the Apache License, Version 2.0
 
 import os
+from pathlib import Path
 import re
 
+from colcon_core.dependency_descriptor import DependencyDescriptor
 from colcon_core.package_identification import logger
 from colcon_core.package_identification \
     import PackageIdentificationExtensionPoint
 from colcon_core.plugin_system import satisfies_version
-
-from pathlib import Path
 from pyparsing import alphanums
 from pyparsing import delimitedList
 from pyparsing import Dict
@@ -57,9 +57,13 @@ class BazelPackageIdentification(PackageIdentificationExtensionPoint):
         desc.type = 'bazel'
         if desc.name is None:
             desc.name = data['name']
-        desc.dependencies['build'] |= data['depends']['build']
-        desc.dependencies['run'] |= data['depends']['run']
-        desc.dependencies['test'] |= data['depends']['test']
+
+        desc.dependencies['build'] |= {
+            DependencyDescriptor(name) for name in data['depends']['build']}
+        desc.dependencies['run'] |= {
+            DependencyDescriptor(name) for name in data['depends']['run']}
+        desc.dependencies['test'] |= {
+            DependencyDescriptor(name) for name in data['depends']['test']}
 
 
 def extract_data(build_file):

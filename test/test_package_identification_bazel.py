@@ -3,7 +3,9 @@
 
 from pathlib import Path
 from tempfile import TemporaryDirectory
+import copy
 
+from colcon_core.dependency_descriptor import DependencyDescriptor
 from colcon_core.package_descriptor import PackageDescriptor
 from colcon_bazel.package_identification.bazel \
     import BazelPackageIdentification
@@ -75,11 +77,12 @@ def test_identify():
         assert desc.name == 'other-name'
         assert desc.type == 'bazel'
         assert set(desc.dependencies.keys()) == {'build', 'run', 'test'}
-        assert desc.dependencies['build'] == {'build-depA', 'build-depB',
-                                              'lib-dep'}
-        assert desc.dependencies['run'] == {'run-depA', 'run-depB',
-                                            'lib-run-dep'}
-        assert desc.dependencies['test'] == {'test-dep', 'test-run-dep'}
+        assert check_dependencies(desc.dependencies['build'],
+                                  ['build-depA', 'build-depB', 'lib-dep'])
+        assert check_dependencies(desc.dependencies['run'],
+                                  ['run-depA', 'run-depB', 'lib-run-dep'])
+        assert check_dependencies(desc.dependencies['test'],
+                                  ['test-dep','test-run-dep'])
 
         desc.name = None
         (basepath / 'sub1/sub2/sub3').mkdir(parents=True, exist_ok=True)
@@ -110,3 +113,26 @@ def test_extract_content():
             ')\n')
         content = extract_content(basepath / 'BUILD.bazel')
         assert content == 'java_binary(\nname = "pkg-name",\n)\n'
+
+
+def check_dependencies(actual, expected):
+    """
+    Check that all of the expected names are in actual
+
+    :param actual: Set of DependencyDescriptor
+    :param expected: List of str names
+    :return: True if all expected names are in actual
+    """
+    if len(actual) != len(expected):
+        return False
+
+    deps = copy.copy(actual)
+
+    for name in expected:
+        descriptor = next(iter(
+            [d for d in deps if d.name == name]), None)
+        if descriptor is None:
+            return False
+        deps.remove(descriptor)
+    assert len(deps) == 0
+    return True
