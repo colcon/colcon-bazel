@@ -58,16 +58,12 @@ class BazelPackageIdentification(PackageIdentificationExtensionPoint):
         if desc.name is None:
             desc.name = data['name']
 
-        build_deps = {DependencyDescriptor(name)
-                      for name in data['depends']['build']}
-        run_deps = {DependencyDescriptor(name)
-                    for name in data['depends']['run']}
-        test_deps = {DependencyDescriptor(name)
-                     for name in data['depends']['test']}
-
-        desc.dependencies['build'] |= build_deps
-        desc.dependencies['run'] |= run_deps
-        desc.dependencies['test'] |= test_deps
+        desc.dependencies['build'] |= {
+            DependencyDescriptor(name) for name in data['depends']['build']}
+        desc.dependencies['run'] |= {
+            DependencyDescriptor(name) for name in data['depends']['run']}
+        desc.dependencies['test'] |= {
+            DependencyDescriptor(name) for name in data['depends']['test']}
 
 
 def extract_data(build_file):
