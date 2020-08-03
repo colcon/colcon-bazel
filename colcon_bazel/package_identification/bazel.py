@@ -135,17 +135,17 @@ def extract_project_name(content):
     # extract project name
     match = re.search(
         # keyword
-        'name'
+        r'name'
         # optional white space
-        '\s*'
+        r'\s*'
         # equal assignment
-        '\='
+        r'\='
         # optional white space
-        '\s*'
+        r'\s*'
         # optional "opening" quote
-        '("?)'
+        r'("?)'
         # project name
-        '([a-zA-Z0-9_-]+)'
+        r'([a-zA-Z0-9_-]+)'
         # optional "closing" quote (only if an "opening" quote was used)
         r'\1',
         content)
