@@ -48,9 +48,9 @@ def test_identify():
         assert desc.type == 'bazel'
 
         desc.name = 'other-name'
-        with pytest.raises(RuntimeError) as e:
+        with pytest.raises(RuntimeError) as einfo:
             extension.identify(desc)
-        assert str(e).endswith('Package name already set to different value')
+        assert str(einfo.value).endswith('Package name already set to different value')
 
         (basepath / 'BUILD.bazel').write_text(
             'java_binary(\n'
