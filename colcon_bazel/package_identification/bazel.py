@@ -26,6 +26,12 @@ from pyparsing import Word
 class BazelPackageIdentification(PackageIdentificationExtensionPoint):
     """Identify Bazel packages with `BUILD` files."""
 
+    # Set the priority slightly lower than the default.
+    # In the case that there are files for both Bazel and CMake, this will
+    # allow CMake to 'win'.
+    # This can be overridden via colcon metadata or colcon.pkg files.
+    PRIORITY = 90
+
     def __init__(self):  # noqa: D107
         super().__init__()
         satisfies_version(
