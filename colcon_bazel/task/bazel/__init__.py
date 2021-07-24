@@ -110,11 +110,11 @@ def get_bazel_startup_options(args):
     :returns: startup options
     :rtype: list
     """
-    bazel_args = (args.bazel_args or [])
-    tmp_args = ' '.join(bazel_args)
+    bazel_opts = (args.bazel_opts or [])
+    tmp_opts = ' '.join(bazel_opts)
 
     regex = '.*(' + BZL_OUTPUT + '|' + BZL_INSTALL + ').*'
-    if (not re.match(regex, tmp_args)):
+    if (not re.match(regex, tmp_opts)):
         # Default Bazel 'build' & 'install' folder for colcon.
         output_path = BZL_OUTPUT + '=' + args.build_base + '/bazel'
         install_path = BZL_INSTALL + '=' + args.install_base + '/bazel'

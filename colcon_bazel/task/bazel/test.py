@@ -23,14 +23,18 @@ class BazelTestTask(TaskExtensionPoint):
 
     def add_arguments(self, *, parser):  # noqa: D102
         parser.add_argument(
+            '--bazel-opts',
+            nargs='*', metavar='*', type=str.lstrip,
+            help='Append specific options of the default options')
+        parser.add_argument(
+            '--bazel-task',
+            help='Run a specific task instead of the default task')
+        parser.add_argument(
             '--bazel-args',
             nargs='*', metavar='*', type=str.lstrip,
             help='Pass arguments to Bazel projects. '
             'Arguments matching other options must be prefixed by a space,\n'
             'e.g. --bazel-args " --help"')
-        parser.add_argument(
-            '--bazel-task',
-            help='Run a specific task instead of the default task')
 
     async def test(self, *, additional_hooks=None):  # noqa: D102
         pkg = self.context.pkg
