@@ -30,13 +30,13 @@ def test_identify():
         (basepath / 'BUILD.bazel').write_text('')
         assert extension.identify(desc) is None
         assert desc.name is not None
-        assert desc.type is 'bazel'
+        assert desc.type == 'bazel'
 
         desc.name = None
         (basepath / 'BUILD').write_text('')
         assert extension.identify(desc) is None
         assert desc.name is not None
-        assert desc.type is 'bazel'
+        assert desc.type == 'bazel'
 
         desc.name = None
         (basepath / 'BUILD.bazel').write_text(
