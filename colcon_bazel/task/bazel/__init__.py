@@ -82,7 +82,7 @@ async def get_bazel_tasks(path):
         BAZEL_EXECUTABLE, 'tasks'], cwd=path)
     lines = output.decode().splitlines()
     separator = ' - '
-    return [l.split(separator)[0] for l in lines if separator in l]
+    return [line.split(separator)[0] for line in lines if separator in line]
 
 
 def get_bazel_executable(args):
