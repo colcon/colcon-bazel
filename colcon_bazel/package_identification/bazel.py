@@ -2,14 +2,13 @@
 # Licensed under the Apache License, Version 2.0
 
 import os
+from pathlib import Path
 import re
 
 from colcon_core.package_identification import logger
 from colcon_core.package_identification \
     import PackageIdentificationExtensionPoint
 from colcon_core.plugin_system import satisfies_version
-
-from pathlib import Path
 from pyparsing import alphanums
 from pyparsing import delimitedList
 from pyparsing import Dict
@@ -193,7 +192,7 @@ def parse_config(content):
     :returns: Dictionary of config.
     :rtype: dict
     """
-    quoted = QuotedString(quoteChar='"') | QuotedString(quoteChar='\'')
+    quoted = QuotedString(quoteChar='"') | QuotedString(quoteChar="'")
     item_name = pyparsing_common.identifier.setName('id')
     item_value = (
         Group(  # Array values.
@@ -215,7 +214,7 @@ def parse_config(content):
 
     try:
         config = parser.parseString(content)
-    except Exception as e:
+    except Exception:  # noqa: B902
         logger.warning('No valid Build content')
         return {}
 
@@ -240,5 +239,5 @@ def _extra_deps(value, entry, depends_target, exclude=None):
                 extract_name = pattern.parseString(dep)[0][0]
                 if extract_name != exclude:  # exclude self references
                     depends_target.update({extract_name})
-            except Exception as e:
+            except Exception:  # noqa: B902
                 logger.warning('No valid Build content %s' % dep)

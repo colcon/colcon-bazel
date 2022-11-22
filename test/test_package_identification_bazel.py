@@ -4,11 +4,11 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from colcon_core.package_descriptor import PackageDescriptor
 from colcon_bazel.package_identification.bazel \
     import BazelPackageIdentification
-from colcon_bazel.package_identification.bazel import extract_data
 from colcon_bazel.package_identification.bazel import extract_content
+from colcon_bazel.package_identification.bazel import extract_data
+from colcon_core.package_descriptor import PackageDescriptor
 import pytest
 
 
@@ -30,13 +30,13 @@ def test_identify():
         (basepath / 'BUILD.bazel').write_text('')
         assert extension.identify(desc) is None
         assert desc.name is not None
-        assert desc.type is 'bazel'
+        assert desc.type == 'bazel'
 
         desc.name = None
         (basepath / 'BUILD').write_text('')
         assert extension.identify(desc) is None
         assert desc.name is not None
-        assert desc.type is 'bazel'
+        assert desc.type == 'bazel'
 
         desc.name = None
         (basepath / 'BUILD.bazel').write_text(
@@ -50,7 +50,8 @@ def test_identify():
         desc.name = 'other-name'
         with pytest.raises(RuntimeError) as einfo:
             extension.identify(desc)
-        assert str(einfo.value).endswith('Package name already set to different value')
+        assert str(einfo.value).endswith(
+            'Package name already set to different value')
 
         (basepath / 'BUILD.bazel').write_text(
             'java_binary(\n'
