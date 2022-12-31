@@ -1,20 +1,17 @@
 # Copyright 2018 Mickael Gaillard
 # Licensed under the Apache License, Version 2.0
 
-
-import asyncio
-import pytest
+from tempfile import TemporaryDirectory
 
 from colcon_bazel.task.bazel.build import BazelBuildTask
 from colcon_core.package_descriptor import PackageDescriptor
 from colcon_core.task import TaskContext
 from colcon_core.verb.build import BuildPackageArguments
-
-from pathlib import Path
-from tempfile import TemporaryDirectory
+import pytest
 
 
 class MockArgs(object):
+
     def __init__(self, basepath):  # noqa: D107
         super().__init__()
         self.build_base = (basepath + '/build/')
@@ -30,7 +27,7 @@ async def test_task_build():
         extension = BazelBuildTask()
 
         desc = PackageDescriptor(basepath)
-        desc.name = "test"
+        desc.name = 'test'
 
         args_verb = MockArgs(basepath)
         args_pkg = BuildPackageArguments(desc, args_verb)
