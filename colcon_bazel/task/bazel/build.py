@@ -33,9 +33,9 @@ class BazelBuildTask(TaskExtensionPoint):
             '--bazel-task',
             help='Run a specific task instead of the default task')
 
-    async def build(
+    async def build(  # noqa: D102
         self, *, additional_hooks=None, skip_hook_creation=False
-    ):  # noqa: D102
+    ):
         pkg = self.context.pkg
         args = self.context.args
 
