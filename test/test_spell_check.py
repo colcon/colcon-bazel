@@ -1,95 +1,56 @@
-# Copyright 2016-2018 Dirk Thomas
-# Copyright 2018 Mickael Gaillard
+# Copyright 2016-2019 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
 from pathlib import Path
-from tempfile import TemporaryDirectory
 
-from pylint.lint import Run
 import pytest
+from scspell import Report
+from scspell import SCSPELL_BUILTIN_DICT
+from scspell import spell_check
 
 
 spell_check_words_path = Path(__file__).parent / 'spell_check.words'
 
 
-def test_spell_check():
-    try:
-        run_spell_check()
-    except SystemExit as e:
-        assert not e.code, 'Some spell checking errors'
-    else:
-        assert False, \
-            'The pylint API is supposed to raise a SystemExit' \
-            # pragma: no cover
-
-
-def run_spell_check(store_unknown_words_path=None):
+@pytest.fixture(scope='module')
+def known_words():
     global spell_check_words_path
-
-    try:
-        import enchant  # noqa: F401
-    except ImportError:  # pragma: no cover
-        pytest.skip(
-            "Skipping spell checking tests since 'enchant' was not found")
-
-    args = [
-        '--disable=all',
-        '--enable=spelling',
-        '--spelling-dict=en_US',
-        '--ignore-comments=no',
-        '--spelling-private-dict-file=' +
-        str(
-            spell_check_words_path
-            if store_unknown_words_path is None else store_unknown_words_path),
-    ]
-    if store_unknown_words_path is not None:
-        args.append('--spelling-store-unknown-words=y')
-    args += [
-        str(Path(__file__).parents[1] / 'colcon_bazel'),
-    ] + [
-        str(p) for p in
-        (Path(__file__).parents[1] / 'test').glob('**/*.py')
-    ]
-    Run(args)
+    return spell_check_words_path.read_text().splitlines()
 
 
-def test_spell_check_word_list_order():
-    global spell_check_words_path
-    known_words = spell_check_words_path.read_text().splitlines()
+def test_spell_check(known_words):
+    source_filenames = [Path(__file__).parents[1] / 'setup.py'] + \
+        list(
+            (Path(__file__).parents[1] / 'colcon_bazel')
+            .glob('**/*.py')) + \
+        list((Path(__file__).parents[1] / 'test').glob('**/*.py'))
+
+    for source_filename in sorted(source_filenames):
+        print('Spell checking:', source_filename)
+
+    # check all files
+    report = Report(known_words)
+    spell_check(
+        [str(p) for p in source_filenames], base_dicts=[SCSPELL_BUILTIN_DICT],
+        report_only=report, additional_extensions=[('', 'Python')])
+
+    unknown_word_count = len(report.unknown_words)
+    assert unknown_word_count == 0, \
+        'Found {unknown_word_count} unknown words: '.format_map(locals()) + \
+        ', '.join(sorted(report.unknown_words))
+
+    unused_known_words = set(known_words) - report.found_known_words
+    unused_known_word_count = len(unused_known_words)
+    assert unused_known_word_count == 0, \
+        '{unused_known_word_count} words in the word list are not used: ' \
+        .format_map(locals()) + ', '.join(sorted(unused_known_words))
+
+
+def test_spell_check_word_list_order(known_words):
     assert known_words == sorted(known_words), \
         'The word list should be ordered alphabetically'
 
 
-def test_spell_check_word_list_duplicates():
-    global spell_check_words_path
-    known_words = spell_check_words_path.read_text().splitlines()
-    duplicates = list(known_words)
-    for word in set(known_words):
-        duplicates.remove(word)
-    known_words = spell_check_words_path.read_text().splitlines()
-    assert len(duplicates) == 0, \
+def test_spell_check_word_list_duplicates(known_words):
+    assert len(known_words) == len(set(known_words)), \
         'The word list should not contain duplicates'
-
-
-# TODO use newer version of enchant on Travis CI
-@pytest.mark.skip(
-    reason='The older version of enchant on Travis CI / Trusty extracts less'
-           'words from the sources so we cannot enforce an exact match atm')
-def test_spell_check_word_list_unused():
-    with TemporaryDirectory(prefix='test_colcon_') as basepath:
-        words_path = Path(basepath) / 'words'
-        try:
-            run_spell_check(store_unknown_words_path=words_path)
-        except SystemExit as e:
-            assert not e.code, str(e)
-        else:
-            assert False, \
-                'The pylint API is supposed to raise a SystemExit' \
-                # pragma: no cover
-        words = words_path.read_text().splitlines()
-
-    global spell_check_words_path
-    known_words = spell_check_words_path.read_text().splitlines()
-    unused_words = set(known_words) - set(words)
-    assert len(unused_words) == 0, \
-        'The word list should not contain unused words'

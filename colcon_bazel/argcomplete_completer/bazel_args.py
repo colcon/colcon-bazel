@@ -7,6 +7,7 @@ try:
         import ArgcompleteCompleterExtensionPoint
 except ImportError:
     class ArgcompleteCompleterExtensionPoint:  # noqa: D101
+        EXTENSION_POINT_VERSION = '1.0'
         pass
 from colcon_core.plugin_system import satisfies_version
 
