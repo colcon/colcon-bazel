@@ -5,7 +5,10 @@
 from pathlib import Path
 import sys
 
+import pytest
 
+
+@pytest.mark.linter
 def test_copyright_license():
     missing = check_files([Path(__file__).parents[1]])
     assert not len(missing), \

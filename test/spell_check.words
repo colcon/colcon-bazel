@@ -16,6 +16,7 @@ https
 iterdir
 karg
 kislyuk
+linter
 lstrip
 mickael
 nargs
@@ -23,6 +24,7 @@ noqa
 noshow
 pathlib
 plugin
+pydocstyle
 pyparsing
 pytest
 returncode
